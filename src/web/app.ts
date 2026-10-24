@@ -704,7 +704,7 @@ function searchView(): HTMLElement {
           'a',
           { class: 'result', href: fileHash(projectId, r.path), 'data-item': '', 'data-key': `r:${projectId}:${r.path}` },
           h('span', { class: 'result-name' }, r.name),
-          h('span', { class: 'item-meta' }, plural(r.matchCount, 'match', 'matches')),
+          h('span', { class: 'item-meta' }, r.matchCount === 0 ? 'file name matches' : plural(r.matchCount, 'matching line')),
           ...r.matches.map((m) =>
             h(
               'p',

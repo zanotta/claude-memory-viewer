@@ -6,8 +6,10 @@ import { fileURLToPath } from 'node:url';
 import { HELP, parseCliArgs, UsageError } from './args.js';
 import { resolveConfigDir } from './config-dir.js';
 import { Scanner } from './scanner.js';
+import { SearchIndex } from './search.js';
 import { isLoopbackHost } from './security.js';
 import { startServer } from './server.js';
+import { startWatcher } from './watcher.js';
 
 const EXIT_OK = 0;
 const EXIT_ERROR = 1;
@@ -44,9 +46,11 @@ async function run(argv: readonly string[]): Promise<number> {
   }
 
   const webDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'web');
+  const search = new SearchIndex(scanner);
+  void search.refresh().catch(() => undefined); // warm up; queries wait for it
   let running;
   try {
-    running = await startServer({ scanner, host: opts.host, port: opts.port, webDir });
+    running = await startServer({ scanner, host: opts.host, port: opts.port, webDir, search });
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === 'EADDRINUSE') {
@@ -82,6 +86,13 @@ async function run(argv: readonly string[]): Promise<number> {
       `  listening:  ${url}\n` +
       `Press Ctrl+C to stop.\n`,
   );
+  const watcher = await startWatcher({
+    scanner,
+    onChange: (event) => {
+      // Refresh the search index first so a client that reacts to the event sees fresh results.
+      void search.refresh().catch(() => undefined).finally(() => running.events.broadcast(event));
+    },
+  });
   if (opts.open) openBrowser(url);
 
   await new Promise<void>((resolve) => {
@@ -89,6 +100,7 @@ async function run(argv: readonly string[]): Promise<number> {
     const shutdown = (): void => {
       if (closing) return;
       closing = true;
+      watcher.close();
       void running.close().then(resolve);
     };
     process.once('SIGINT', shutdown);

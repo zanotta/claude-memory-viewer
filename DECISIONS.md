@@ -136,6 +136,43 @@ It never printed file contents or values.
   string; the UI builds `<mark>` nodes with the DOM API, which is the same
   guarantee as "escape first, mark later" without ever using `innerHTML`.
 
+### Search
+
+* In-memory index of every memory file, project-level `CLAUDE*.md` and the global
+  file. `refresh()` walks the listing, compares `path|mtime|size` and re-reads only
+  what changed, dropping vanished files. It runs after each (debounced) watcher
+  event and, as a safety net, before a search when the index is older than 3 s.
+* Normalisation is NFD, strip combining marks, lower-case, applied one code point
+  at a time so hits map back to exact positions in the original text.
+* A query is split on whitespace; every term must occur somewhere in the file
+  (name or text). Results rank file-name matches first, then by matching lines.
+  200 files max (`truncated` tells the UI), files over 2 MB are not indexed.
+* The API returns `segments` (`{text, hit}`) rather than HTML.
+
+### Live updates
+
+* Native `fs.watch` (recursive) on `<config>/projects` plus a non-recursive watch
+  on the config directory for the global `CLAUDE.md`. Only memory files
+  (`<id>/memory/**.md`) and project folder add/remove are relevant: transcripts
+  are written constantly while a session runs and are ignored.
+* Project-level `CLAUDE.md` files live outside the config directory, so in native
+  mode a light 5 s poll stats those few files. If native watching is unavailable,
+  fails, or `projects/` does not exist yet, everything falls back to a 3 s poll
+  that diffs `mtime:size` snapshots (which also yields exact per-file scopes).
+* Events are debounced for 250 ms and collapsed: one file → `{project, path}`,
+  several files in one project → `{project, path: null}`, otherwise "everything".
+* The client refetches the overview, the open project and the open file, then
+  re-renders while restoring the scroll offsets and the focused item.
+
+### UI
+
+* No inline styles or handlers anywhere (the CSP forbids them). The only
+  `innerHTML` assignment is the output of `renderMarkdown()`.
+* Images in Markdown are never fetched (the UI must make no outbound requests);
+  they appear as a text placeholder.
+* Preferences kept in `localStorage` (raw/rendered) are optional: every access is
+  wrapped in try/catch.
+
 ## Future work
 
 (Ideas that are out of scope for now.)

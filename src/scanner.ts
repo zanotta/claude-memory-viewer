@@ -430,6 +430,46 @@ export class Scanner {
     return out;
   }
 
+  /** Reads the text of an entry returned by `listAllFiles()`, with the same checks as the API. */
+  async readEntryText(project: string, entry: FileEntry): Promise<ReadResult> {
+    if (entry.scope === 'memory') {
+      return readTextFileWithin(
+        path.join(this.projectsDir, project, 'memory'),
+        entry.path.slice('memory/'.length),
+        this.limits.maxFileBytes,
+      );
+    }
+    return readFixedTextFile(entry.absPath, this.limits.maxFileBytes);
+  }
+
+  /**
+   * `key -> "mtime:size"` for every readable file; used to detect changes by polling.
+   * With `projectFilesOnly`, only the CLAUDE.md files that live in project folders
+   * (the part `fs.watch` on the config directory cannot see) are stat-ed.
+   */
+  async snapshot(projectFilesOnly = false): Promise<Map<string, string>> {
+    const out = new Map<string, string>();
+    if (!projectFilesOnly) {
+      for (const f of await this.listAllFiles()) {
+        out.set(`${f.project}|${f.entry.path}`, `${f.entry.mtimeMs}:${f.entry.size}`);
+      }
+      return out;
+    }
+    for (const id of await this.listProjectIds()) {
+      const resolved = await this.resolver.resolve(path.join(this.projectsDir, id), id);
+      if (!resolved.path) continue;
+      for (const name of PROJECT_FILE_NAMES) {
+        try {
+          const st = await stat(path.join(resolved.path, ...name.split('/')));
+          if (st.isFile()) out.set(`${id}|project/${name}`, `${st.mtimeMs}:${st.size}`);
+        } catch {
+          // missing file: simply absent from the snapshot
+        }
+      }
+    }
+    return out;
+  }
+
   // -- reading one file -----------------------------------------------------
 
   async readFile(projectId: string, virtualPath: string): Promise<FileLookup> {
