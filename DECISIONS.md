@@ -112,6 +112,30 @@ It never printed file contents or values.
   extension and NUL checks still apply. **This is a deliberate, narrow exception
   to "realpath must stay inside the allowed folder".**
 
+### Server and security
+
+* Order of checks for every request: `Host` header (403) → method (405) → URL
+  sanity → route. `Sec-Fetch-Site` other than `same-origin`/`none` is refused on
+  `/api/*` as defence in depth (a rebinding-free cross-origin page could still
+  fire requests, even though it cannot read the answers: no CORS headers are sent).
+* `Host` must carry the actual listening port. With `--host` set to a specific
+  address, that address is accepted as well. When binding a wildcard (`0.0.0.0`,
+  `::`) only IP literals are accepted besides the loopback names: DNS rebinding
+  needs a DNS name, so literals are safe, and it keeps LAN use possible.
+* The CSP is the requested `default-src 'self'; frame-ancestors 'none'` plus
+  `base-uri 'none'; form-action 'none'`. Because `style-src` falls back to
+  `default-src`, the UI must not use inline `style=""` attributes or `<style>`.
+* `:id` is always matched against the real directory listing before it touches
+  the filesystem. The reserved id `@global` addresses `<config>/CLAUDE.md`.
+* File paths in the API are *virtual*: `memory/<rel>` (client chosen, fully
+  validated), `project/<fixed name>` and `CLAUDE.md` for the global id (only
+  fixed names accepted).
+* Static files are served from an allow-list built at start-up (exact URL →
+  file), so there is no path to traverse.
+* Search results carry highlight segments (`{text, hit}`) instead of an HTML
+  string; the UI builds `<mark>` nodes with the DOM API, which is the same
+  guarantee as "escape first, mark later" without ever using `innerHTML`.
+
 ## Future work
 
 (Ideas that are out of scope for now.)
