@@ -1,0 +1,1 @@
+- [Configuração](configuracao.md) — Variáveis de ambiente e segredos

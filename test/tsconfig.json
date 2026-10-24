@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "../dist-test",
+    "tsBuildInfoFile": "../node_modules/.cache/tsbuild/test.tsbuildinfo",
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["*.ts"],
+  "references": [{ "path": "../src/shared" }, { "path": "../src" }, { "path": "../src/web" }]
+}

@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "../../dist/web",
+    "tsBuildInfoFile": "../../node_modules/.cache/tsbuild/web.tsbuildinfo",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": []
+  },
+  "include": ["*.ts"],
+  "references": [{ "path": "../shared" }]
+}

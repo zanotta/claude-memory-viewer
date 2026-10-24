@@ -65,7 +65,52 @@ It never printed file contents or values.
 
 ## Design decisions
 
-(Filled in per phase.)
+### Build and layout
+
+* Four TypeScript projects built with `tsc -b`: `src/shared` (types only, never
+  loaded at runtime), `src` (server, Node types), `src/web` (browser, DOM lib)
+  and `test`. Shared types live in their own project so the browser program does
+  not need Node types and the server does not need the DOM lib. This is why
+  `types.ts` sits in `src/shared/` instead of `src/`.
+* Tests are compiled to `dist-test/` and import the *built* output (`../dist/...`),
+  as requested. `scripts/run-tests.mjs` lists the files itself because
+  `node --test` does not expand globs on Node 20 or in the Windows shell.
+* Argument parsing uses `node:util` `parseArgs` (built in, so still zero runtime
+  dependencies). It lives in `args.ts` so tests can import it without starting
+  the program; `cli.ts` is a thin entry point that always runs `main()`. (A
+  "run only if invoked directly" check breaks when `npx` starts the program via
+  a symlink.)
+
+### Project path resolution
+
+* Strategy 1 (transcript `cwd`) is only trusted when the candidate re-encodes to
+  the folder name. A doctored or sub-folder `cwd` therefore cannot redirect the
+  tool to an arbitrary directory.
+* Strategy 2 does not guess separators. It lists each directory on the way and
+  keeps entries whose own encoding is a prefix of what is left of the name. That
+  handles `-`, `.`, `_`, spaces and anything else in one rule and needs far fewer
+  filesystem calls than stat-ing every joiner combination. A read budget (400
+  directory listings) bounds the work; ambiguity is reported, not hidden.
+* Transcript reads are bounded by bytes (1 MiB, exact), lines (400) and files (the
+  5 most recent). Never the whole file.
+
+### Index window
+
+* `MEMORY.md` limits default to 200 lines / 25 KiB (`25 * 1024` bytes), exported as
+  constants and overridable through `Scanner` options. The cut is made on a line
+  boundary: the first line that would exceed either limit is the first line "not
+  loaded into context".
+
+### File access
+
+* Memory files (path chosen by the client): the real path after resolving
+  symlinks must stay inside the real memory folder, only `.md`/`.txt`, 2 MB cap,
+  NUL bytes rejected.
+* Fixed-name files (`<config>/CLAUDE.md`, project `CLAUDE.md`,
+  `.claude/CLAUDE.md`, `CLAUDE.local.md`): no client input reaches the path, so a
+  symlink to elsewhere is followed (a dotfiles repo is a common setup). The size,
+  extension and NUL checks still apply. **This is a deliberate, narrow exception
+  to "realpath must stay inside the allowed folder".**
 
 ## Future work
 

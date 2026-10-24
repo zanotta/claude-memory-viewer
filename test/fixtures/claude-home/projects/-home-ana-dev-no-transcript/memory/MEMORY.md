@@ -1,0 +1,1 @@
+- [Only entry](only.md) — The only topic

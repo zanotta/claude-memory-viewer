@@ -1,0 +1,45 @@
+{
+  "name": "claude-memory-viewer",
+  "version": "0.1.0",
+  "description": "Read-only local viewer for Claude Code memories (CLAUDE.md files and auto memory). Unofficial.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "memory",
+    "viewer",
+    "cli"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "author": "zanotta",
+  "bin": {
+    "claude-memory-viewer": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.d.ts",
+    "!dist/**/*.map"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -b src/shared src src/web && node scripts/copy-assets.mjs",
+    "test": "tsc -b test && node scripts/run-tests.mjs",
+    "start": "node dist/cli.js",
+    "clean": "node scripts/clean.mjs",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zanotta/claude-memory-viewer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zanotta/claude-memory-viewer/issues"
+  },
+  "homepage": "https://github.com/zanotta/claude-memory-viewer#readme",
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,3 @@
+{"type":"summary","operation":"init","timestamp":"2026-01-01T00:00:00Z","sessionId":"s1"}
+{"type":"summary","operation":"init2","timestamp":"2026-01-01T00:00:01Z","sessionId":"s1"}
+{"type":"user","message":"hello","cwd":"/home/ana/dev/my-hyphen-app","sessionId":"s1"}
