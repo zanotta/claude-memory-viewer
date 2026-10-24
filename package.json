@@ -11,7 +11,7 @@
   ],
   "type": "module",
   "license": "MIT",
-  "author": "zanotta",
+  "author": "Rodrigo Zanotta",
   "bin": {
     "claude-memory-viewer": "dist/cli.js"
   },
