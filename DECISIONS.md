@@ -182,7 +182,7 @@ Verified on macOS (arm64), Node 24.19.0 / npm 12.0.2 unless stated otherwise.
 | Unit, integration and security tests | `npm test` | 195 pass |
 | Same suite on the CI Node versions | official binaries 20.20.2 and 22.23.4: `node scripts/run-tests.mjs --test-reporter=spec` | 195 pass on both |
 | Test stability | `npm test` repeated 3 times | no flakes |
-| Tarball contents | `npm pack --dry-run` | 23 files: `dist/**/*.js`, assets, `LICENSE`, `README.md`, `package.json`; no `.d.ts`, no maps, no tests |
+| Tarball contents | `npm pack --dry-run` | 24 files (47 kB): `dist/**/*.js`, assets, `LICENSE`, both READMEs, `package.json`; no `.d.ts`, no maps, no tests |
 | Install from tarball | `npm pack`, then `npm install <tgz>` in an empty folder | bin symlinked; `--version`, `--json` and the server work; static files resolve from the installed location (run from a different cwd); no runtime dependencies |
 | `npx` against a local directory | `npx --yes /path/to/repo --version` (from another cwd) | works |
 | git flow (what `npx github:...` does) | `npx --yes --allow-git=all git+file:///path/to/repo --version`; the repo's `dist/` is git-ignored, so this proves `prepare` builds from source | works. **Without `--allow-git=all` npm 12 refuses: `EALLOWGIT`** |
