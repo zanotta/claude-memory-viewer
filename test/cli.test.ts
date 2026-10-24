@@ -32,6 +32,10 @@ describe('parseCliArgs', () => {
     assert.equal(parseCliArgs(['-h']).help, true);
   });
 
+  it('tolerates the leading "--" that npx forwards', () => {
+    assert.equal(parseCliArgs(['--', '--port', '5000']).port, 5000);
+  });
+
   it('turns bad input into usage errors', () => {
     for (const argv of [['--port', 'abc'], ['--port', '70000'], ['--port', '-1'], ['--bogus'], ['stray'], ['--host', ' ']]) {
       assert.throws(() => parseCliArgs(argv), UsageError, argv.join(' '));

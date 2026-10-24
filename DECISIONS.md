@@ -173,6 +173,55 @@ It never printed file contents or values.
 * Preferences kept in `localStorage` (raw/rendered) are optional: every access is
   wrapped in try/catch.
 
+## Packaging and verification log
+
+Verified on macOS (arm64), Node 24.19.0 / npm 12.0.2 unless stated otherwise.
+
+| What | How | Result |
+| --- | --- | --- |
+| Unit, integration and security tests | `npm test` | 195 pass |
+| Same suite on the CI Node versions | official binaries 20.20.2 and 22.23.4: `node scripts/run-tests.mjs --test-reporter=spec` | 195 pass on both |
+| Test stability | `npm test` repeated 3 times | no flakes |
+| Tarball contents | `npm pack --dry-run` | 23 files: `dist/**/*.js`, assets, `LICENSE`, `README.md`, `package.json`; no `.d.ts`, no maps, no tests |
+| Install from tarball | `npm pack`, then `npm install <tgz>` in an empty folder | bin symlinked; `--version`, `--json` and the server work; static files resolve from the installed location (run from a different cwd); no runtime dependencies |
+| `npx` against a local directory | `npx --yes /path/to/repo --version` (from another cwd) | works |
+| git flow (what `npx github:...` does) | `npx --yes --allow-git=all git+file:///path/to/repo --version`; the repo's `dist/` is git-ignored, so this proves `prepare` builds from source | works. **Without `--allow-git=all` npm 12 refuses: `EALLOWGIT`** |
+| Clone flow | fresh `git clone`, `npm ci`, `npm test`, `npm start -- --json` | works; 187 tests passed at that point |
+| Real `~/.claude` | server + Chrome (headless, DevTools protocol): opened every project and all 27 files, global view, search; counted requests and console messages; snapshot of every memory file before/after | 0 external requests, 0 console errors, 0 changes |
+| UI behaviour | Chrome (headless): selection, raw toggle, `j/k/h/l/r//`, accent-insensitive search, live update with scroll/focus preserved, new file appearing, dark/light, 390 px width without horizontal scroll | all as expected |
+
+### npm 12 notes (found while verifying)
+
+* `allow-git` defaults to `none`, so `npx github:zanotta/claude-memory-viewer`
+  fails with `EALLOWGIT` unless the user passes `--allow-git=all` (or sets it in
+  their npm config). Older npm versions (bundled with Node 20/22) are not affected.
+  The READMEs document this; the clone flow is unaffected.
+* Dependency install scripts are blocked by default in npm 12. This did **not**
+  stop `prepare` for the git source in the test above, but it is worth re-checking
+  with the real GitHub URL.
+* Unknown flags such as `--allow-git` only produce a warning on older npm.
+
+### Still pending
+
+* **CI has not run.** The matrix (ubuntu, macos, windows x Node 20, 22) is in
+  `.github/workflows/ci.yml`; Windows and Linux were not exercised locally.
+  Windows-specific paths (`C:\...` decoding, drive roots) are covered by unit tests
+  with an injected filesystem and `path.win32`, not by a real Windows run.
+* `npx github:zanotta/claude-memory-viewer` can only be tested once the repository
+  is public (see the npm 12 note above).
+* Screenshot for the README (`docs/screenshot.png`).
+
 ## Future work
 
-(Ideas that are out of scope for now.)
+Out of scope for this version, in rough priority order:
+
+* Verify the folder-name encoding on Windows and for `.`/`_`/spaces/non-ASCII, and
+  the long-name truncation, against real data from those platforms.
+* A `--poll` flag (and `--index-lines`/`--index-bytes`) for network filesystems and
+  future changes of the `MEMORY.md` window.
+* Editing memories from the UI, history/diffs between versions (git snapshots),
+  export, authentication for remote use, UI translations, a standalone binary.
+* Reading transcripts (`*.jsonl`) for session context, with explicit consent.
+* Markdown: setext headings, indented code blocks, reference links, footnotes;
+  syntax highlighting would need a vendored highlighter (no network, no deps).
+* Scope events per file in the UI so only the affected pane is refetched.

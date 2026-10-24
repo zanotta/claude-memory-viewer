@@ -46,17 +46,17 @@ export class EventHub {
       if (this.clients.size === 0) this.stopHeartbeat();
     });
     if (!this.timer) {
-      this.timer = setInterval(() => this.write(': keep-alive\n\n'), HEARTBEAT_MS);
+      this.timer = setInterval(() => this.pushRaw(': keep-alive\n\n'), HEARTBEAT_MS);
       this.timer.unref();
     }
     return true;
   }
 
   broadcast(event: ChangeEvent): void {
-    this.write(`event: changed\ndata: ${JSON.stringify(event)}\n\n`);
+    this.pushRaw(`event: changed\ndata: ${JSON.stringify(event)}\n\n`);
   }
 
-  private write(chunk: string): void {
+  private pushRaw(chunk: string): void {
     for (const res of this.clients) {
       try {
         res.write(chunk);

@@ -41,6 +41,12 @@ Requires **Node.js 20 or newer**.
 npx github:zanotta/claude-memory-viewer
 ```
 
+> **npm 12 and newer** block packages fetched from git by default
+> (`EALLOWGIT: Fetching packages of type "git" have been disabled`). Opt in for
+> this one command with `npx --allow-git=all github:zanotta/claude-memory-viewer`
+> (or use the clone method below, which is unaffected). The first run compiles the
+> project from source through its `prepare` script, which takes a few seconds.
+
 **Or clone it:**
 
 ```sh
@@ -66,8 +72,8 @@ The browser opens at <http://127.0.0.1:4577/>. Press `Ctrl+C` to stop.
 Examples:
 
 ```sh
-npx github:zanotta/claude-memory-viewer -- --port 5000 --no-open
-npx github:zanotta/claude-memory-viewer -- --config-dir /path/to/other/.claude
+npx github:zanotta/claude-memory-viewer --port 5000 --no-open
+npx github:zanotta/claude-memory-viewer --config-dir /path/to/other/.claude
 npm start -- --json | jq '.overview.projects[] | {shortName: .shortName, files: .memoryFileCount}'
 ```
 
@@ -140,6 +146,11 @@ Memories can contain sensitive information, so the defaults are conservative:
 **"No Claude Code config directory found"** — the page shows where it looked.
 Point it somewhere else with `--config-dir /path/to/.claude` or set
 `CLAUDE_CONFIG_DIR`.
+
+**`EALLOWGIT ... Fetching packages of type "git" have been disabled`** — npm 12+
+disables git dependencies by default. Run
+`npx --allow-git=all github:zanotta/claude-memory-viewer`, or clone the
+repository and use `npm install && npm start`.
 
 **"Port 4577 is in use"** — the viewer already tries the next 20 ports; pass
 `--port <n>` to choose another range.

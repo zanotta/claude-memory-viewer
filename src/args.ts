@@ -29,10 +29,12 @@ Nothing is ever written to your Claude config directory.
 `;
 
 export function parseCliArgs(argv: readonly string[]): CliOptions {
+  // `npx <pkg> -- --port 1` forwards the literal "--"; accept it.
+  const args = argv[0] === '--' ? argv.slice(1) : argv;
   let values;
   try {
     ({ values } = parseArgs({
-      args: [...argv],
+      args: [...args],
       allowPositionals: false,
       strict: true,
       options: {
